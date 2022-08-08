@@ -10,11 +10,12 @@ import (
 	"unicode/utf8"
 
 	"github.com/dustin/go-humanize"
+	"github.com/pkg/errors"
+	"github.com/urfave/cli/v2"
+
 	"github.com/micro/micro/v3/client/cli/namespace"
 	"github.com/micro/micro/v3/client/cli/util"
 	"github.com/micro/micro/v3/service/store"
-	"github.com/pkg/errors"
-	"github.com/urfave/cli/v2"
 )
 
 // read gets something from the store
@@ -59,7 +60,7 @@ func read(ctx *cli.Context) error {
 		opts = append(opts, store.ReadOrder(order))
 	}
 
-	records, err := store.DefaultStore.Read(ctx.Args().First(), opts...)
+	records, err := store.DefaultStore.Read(nil, ctx.Args().First(), opts...)
 	if err != nil {
 		if err.Error() == "not found" {
 			return err
@@ -132,7 +133,7 @@ func write(ctx *cli.Context) error {
 		return err
 	}
 
-	if err := store.DefaultStore.Write(record, store.WriteTo(ns, ctx.String("table"))); err != nil {
+	if err := store.DefaultStore.Write(nil, record, store.WriteTo(ns, ctx.String("table"))); err != nil {
 		return errors.Wrap(err, "couldn't write")
 	}
 	return nil
@@ -177,7 +178,7 @@ func list(ctx *cli.Context) error {
 		opts = append(opts, store.ListOrder(order))
 	}
 
-	keys, err := store.DefaultStore.List(opts...)
+	keys, err := store.DefaultStore.List(nil, opts...)
 	if err != nil {
 		return errors.Wrap(err, "couldn't list")
 	}
@@ -215,7 +216,7 @@ func delete(ctx *cli.Context) error {
 		return err
 	}
 
-	if err := store.DefaultStore.Delete(ctx.Args().First(), store.DeleteFrom(ns, ctx.String("table"))); err != nil {
+	if err := store.DefaultStore.Delete(nil, ctx.Args().First(), store.DeleteFrom(ns, ctx.String("table"))); err != nil {
 		return errors.Wrapf(err, "couldn't delete key %s", ctx.Args().First())
 	}
 	return nil
@@ -231,7 +232,7 @@ func initStore(ctx *cli.Context) error {
 		opts = append(opts, store.Table(ctx.String("table")))
 	}
 
-	if err := store.DefaultStore.Init(opts...); err != nil {
+	if err := store.DefaultStore.Init(nil, opts...); err != nil {
 		return errors.Wrap(err, "couldn't reinitialise store with options")
 	}
 	return nil

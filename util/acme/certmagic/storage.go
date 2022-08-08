@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/caddyserver/certmagic"
+
 	"github.com/micro/micro/v3/service/store"
 	"github.com/micro/micro/v3/util/sync"
 )
@@ -68,14 +69,14 @@ func (s *storage) Store(key string, value []byte) error {
 		Key:   key,
 		Value: buf.Bytes(),
 	}
-	return s.store.Write(r)
+	return s.store.Write(nil, r)
 }
 
 func (s *storage) Load(key string) ([]byte, error) {
 	if !s.Exists(key) {
 		return nil, certmagic.ErrNotExist(errors.New(key + " doesn't exist"))
 	}
-	records, err := s.store.Read(key)
+	records, err := s.store.Read(nil, key)
 	if err != nil {
 		return nil, err
 	}
@@ -93,18 +94,18 @@ func (s *storage) Load(key string) ([]byte, error) {
 }
 
 func (s *storage) Delete(key string) error {
-	return s.store.Delete(key)
+	return s.store.Delete(nil, key)
 }
 
 func (s *storage) Exists(key string) bool {
-	if _, err := s.store.Read(key); err != nil {
+	if _, err := s.store.Read(nil, key); err != nil {
 		return false
 	}
 	return true
 }
 
 func (s *storage) List(prefix string, recursive bool) ([]string, error) {
-	keys, err := s.store.List()
+	keys, err := s.store.List(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +133,7 @@ func (s *storage) List(prefix string, recursive bool) ([]string, error) {
 }
 
 func (s *storage) Stat(key string) (certmagic.KeyInfo, error) {
-	records, err := s.store.Read(key)
+	records, err := s.store.Read(nil, key)
 	if err != nil {
 		return certmagic.KeyInfo{}, err
 	}

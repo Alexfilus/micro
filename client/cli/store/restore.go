@@ -3,10 +3,11 @@ package cli
 import (
 	"net/url"
 
-	snap "github.com/micro/micro/v3/client/cli/store/snapshot"
-	"github.com/micro/micro/v3/service/logger"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
+
+	snap "github.com/micro/micro/v3/client/cli/store/snapshot"
+	"github.com/micro/micro/v3/service/logger"
 )
 
 // restore is the entrypoint for micro store restore
@@ -44,7 +45,7 @@ func restore(ctx *cli.Context) error {
 	}
 	counter := uint64(0)
 	for r := range recordChan {
-		err := s.Write(r)
+		err := s.Write(nil, r)
 		if err != nil {
 			log.Logf(logger.ErrorLevel, "couldn't write key %s to store %s", r.Key, s.String())
 		} else {

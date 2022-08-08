@@ -32,7 +32,7 @@ func (a *Auth) List(ctx context.Context, req *pb.ListAccountsRequest, rsp *pb.Li
 
 	// get the records from the store
 	key := strings.Join([]string{storePrefixAccounts, req.Options.Namespace, ""}, joinKey)
-	recs, err := a.Options.Store.Read(key, store.ReadPrefix())
+	recs, err := a.Options.Store.Read(nil, key, store.ReadPrefix())
 	if err != nil {
 		return errors.InternalServerError("auth.Accounts.List", "Unable to read from store: %v", err)
 	}
@@ -97,18 +97,18 @@ func (a *Auth) Delete(ctx context.Context, req *pb.DeleteAccountRequest, rsp *pb
 		return errors.InternalServerError("auth.Accounts.Delete", "Error finding refresh token")
 	}
 	refreshKey := strings.Join([]string{storePrefixRefreshTokens, req.Options.Namespace, accToDelete.ID, tok}, joinKey)
-	if err := a.Options.Store.Delete(refreshKey); err != nil {
+	if err := a.Options.Store.Delete(nil, refreshKey); err != nil {
 		return errors.InternalServerError("auth.Accounts.Delete", "Error deleting refresh token: %v", err)
 	}
 
 	key := strings.Join([]string{storePrefixAccounts, req.Options.Namespace, accToDelete.ID}, joinKey)
 	// delete the account
-	if err := a.Options.Store.Delete(key); err != nil {
+	if err := a.Options.Store.Delete(nil, key); err != nil {
 		return errors.BadRequest("auth.Accounts.Delete", "Error deleting account: %v", err)
 	}
 	keyByName := strings.Join([]string{storePrefixAccountsByName, req.Options.Namespace, accToDelete.Name}, joinKey)
 	// delete the account
-	if err := a.Options.Store.Delete(keyByName); err != nil {
+	if err := a.Options.Store.Delete(nil, keyByName); err != nil {
 		return errors.BadRequest("auth.Accounts.Delete", "Error deleting account: %v", err)
 	}
 
@@ -190,11 +190,11 @@ func (a *Auth) ChangeSecret(ctx context.Context, req *pb.ChangeSecretRequest, rs
 
 	key := strings.Join([]string{storePrefixAccounts, acc.Issuer, acc.ID}, joinKey)
 	// write to the store
-	if err := a.Options.Store.Write(&store.Record{Key: key, Value: bytes}); err != nil {
+	if err := a.Options.Store.Write(nil, &store.Record{Key: key, Value: bytes}); err != nil {
 		return errors.InternalServerError("auth.Accounts.ChangeSecret", "Unable to write account to store: %v", err)
 	}
 	usernameKey := strings.Join([]string{storePrefixAccountsByName, acc.Issuer, acc.Name}, joinKey)
-	if err := a.Options.Store.Write(&store.Record{Key: usernameKey, Value: bytes}); err != nil {
+	if err := a.Options.Store.Write(nil, &store.Record{Key: usernameKey, Value: bytes}); err != nil {
 		return errors.InternalServerError("auth.Accounts.ChangeSecret", "Unable to write account to store: %v", err)
 	}
 

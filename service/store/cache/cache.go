@@ -15,6 +15,8 @@
 package cache
 
 import (
+	"context"
+
 	"github.com/micro/micro/v3/service/store"
 	"github.com/micro/micro/v3/service/store/memory"
 )
@@ -46,14 +48,14 @@ func (c *cache) init(opts ...store.Option) error {
 }
 
 // Init initialises the underlying stores
-func (c *cache) Init(opts ...store.Option) error {
+func (c *cache) Init(ctx context.Context, opts ...store.Option) error {
 	if err := c.init(opts...); err != nil {
 		return err
 	}
-	if err := c.m.Init(opts...); err != nil {
+	if err := c.m.Init(nil, opts...); err != nil {
 		return err
 	}
-	return c.b.Init(opts...)
+	return c.b.Init(nil, opts...)
 }
 
 // Options allows you to view the current options.
@@ -62,18 +64,18 @@ func (c *cache) Options() store.Options {
 }
 
 // Read takes a single key name and optional ReadOptions. It returns matching []*Record or an error.
-func (c *cache) Read(key string, opts ...store.ReadOption) ([]*store.Record, error) {
-	recs, err := c.m.Read(key, opts...)
+func (c *cache) Read(ctx context.Context, key string, opts ...store.ReadOption) ([]*store.Record, error) {
+	recs, err := c.m.Read(nil, key, opts...)
 	if err != nil && err != store.ErrNotFound {
 		return nil, err
 	}
 	if len(recs) > 0 {
 		return recs, nil
 	}
-	recs, err = c.b.Read(key, opts...)
+	recs, err = c.b.Read(nil, key, opts...)
 	if err == nil {
 		for _, rec := range recs {
-			if err := c.m.Write(rec); err != nil {
+			if err := c.m.Write(nil, rec); err != nil {
 				return nil, err
 			}
 		}
@@ -84,41 +86,41 @@ func (c *cache) Read(key string, opts ...store.ReadOption) ([]*store.Record, err
 // Write() writes a record to the store, and returns an error if the record was not written.
 // If the write succeeds in writing to memory but fails to write through to file, you'll receive an error
 // but the value may still reside in memory so appropriate action should be taken.
-func (c *cache) Write(r *store.Record, opts ...store.WriteOption) error {
-	if err := c.m.Write(r, opts...); err != nil {
+func (c *cache) Write(ctx context.Context, r *store.Record, opts ...store.WriteOption) error {
+	if err := c.m.Write(nil, r, opts...); err != nil {
 		return err
 	}
-	return c.b.Write(r, opts...)
+	return c.b.Write(nil, r, opts...)
 }
 
 // Delete removes the record with the corresponding key from the store.
 // If the delete succeeds in writing to memory but fails to write through to file, you'll receive an error
 // but the value may still reside in memory so appropriate action should be taken.
-func (c *cache) Delete(key string, opts ...store.DeleteOption) error {
-	if err := c.m.Delete(key, opts...); err != nil {
+func (c *cache) Delete(ctx context.Context, key string, opts ...store.DeleteOption) error {
+	if err := c.m.Delete(nil, key, opts...); err != nil {
 		return err
 	}
-	return c.b.Delete(key, opts...)
+	return c.b.Delete(nil, key, opts...)
 }
 
 // List returns any keys that match, or an empty list with no error if none matched.
-func (c *cache) List(opts ...store.ListOption) ([]string, error) {
-	keys, err := c.m.List(opts...)
+func (c *cache) List(ctx context.Context, opts ...store.ListOption) ([]string, error) {
+	keys, err := c.m.List(nil, opts...)
 	if err != nil && err != store.ErrNotFound {
 		return nil, err
 	}
 	if len(keys) > 0 {
 		return keys, nil
 	}
-	keys, err = c.b.List(opts...)
+	keys, err = c.b.List(nil, opts...)
 	if err == nil {
 		for _, key := range keys {
-			recs, err := c.b.Read(key)
+			recs, err := c.b.Read(nil, key)
 			if err != nil {
 				return nil, err
 			}
 			for _, r := range recs {
-				if err := c.m.Write(r); err != nil {
+				if err := c.m.Write(nil, r); err != nil {
 					return nil, err
 				}
 			}

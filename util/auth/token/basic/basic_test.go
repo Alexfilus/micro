@@ -33,7 +33,7 @@ func TestGenerate(t *testing.T) {
 		t.Fatalf("Generate returned %v error, expected nil", err)
 	}
 
-	recs, err := store.List()
+	recs, err := store.List(nil)
 	if err != nil {
 		t.Fatalf("Unable to read from store: %v", err)
 	}

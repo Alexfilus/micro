@@ -35,7 +35,7 @@ func (s *srv) Close() error {
 	return nil
 }
 
-func (s *srv) Init(opts ...store.Option) error {
+func (s *srv) Init(ctx goctx.Context, opts ...store.Option) error {
 	for _, o := range opts {
 		o(&s.options)
 	}
@@ -60,7 +60,7 @@ func (s *srv) Context() goctx.Context {
 }
 
 // Sync all the known records
-func (s *srv) List(opts ...store.ListOption) ([]string, error) {
+func (s *srv) List(ctx goctx.Context, opts ...store.ListOption) ([]string, error) {
 	options := store.ListOptions{
 		Database: s.Database,
 		Table:    s.Table,
@@ -108,7 +108,7 @@ func (s *srv) List(opts ...store.ListOption) ([]string, error) {
 }
 
 // Read a record with key
-func (s *srv) Read(key string, opts ...store.ReadOption) ([]*store.Record, error) {
+func (s *srv) Read(ctx goctx.Context, key string, opts ...store.ReadOption) ([]*store.Record, error) {
 	options := store.ReadOptions{
 		Database: s.Database,
 		Table:    s.Table,
@@ -163,7 +163,7 @@ func (s *srv) Read(key string, opts ...store.ReadOption) ([]*store.Record, error
 }
 
 // Write a record
-func (s *srv) Write(record *store.Record, opts ...store.WriteOption) error {
+func (s *srv) Write(ctx goctx.Context, record *store.Record, opts ...store.WriteOption) error {
 	options := store.WriteOptions{
 		Database: s.Database,
 		Table:    s.Table,
@@ -203,7 +203,7 @@ func (s *srv) Write(record *store.Record, opts ...store.WriteOption) error {
 }
 
 // Delete a record with key
-func (s *srv) Delete(key string, opts ...store.DeleteOption) error {
+func (s *srv) Delete(ctx goctx.Context, key string, opts ...store.DeleteOption) error {
 	options := store.DeleteOptions{
 		Database: s.Database,
 		Table:    s.Table,

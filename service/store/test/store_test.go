@@ -17,6 +17,7 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -26,6 +27,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/kr/pretty"
+
 	"github.com/micro/micro/v3/service/store"
 	"github.com/micro/micro/v3/service/store/cache"
 	"github.com/micro/micro/v3/service/store/file"
@@ -39,9 +41,9 @@ func fileStoreCleanup(db string, s store.Store) {
 }
 
 func cockroachStoreCleanup(db string, s store.Store) {
-	keys, _ := s.List()
+	keys, _ := s.List(nil)
 	for _, k := range keys {
-		s.Delete(k)
+		s.Delete(nil, k)
 	}
 	s.Close()
 }
@@ -67,7 +69,7 @@ func TestStoreReInit(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			defer tc.cleanup(file.DefaultDatabase, tc.s)
-			tc.s.Init(store.Table("bbb"))
+			tc.s.Init(nil, store.Table("bbb"))
 			if tc.s.Options().Table != "bbb" {
 				t.Error("Init didn't reinitialise the store")
 			}
@@ -161,22 +163,23 @@ func runStoreTest(s store.Store, t *testing.T) {
 }
 
 func readTests(s store.Store, t *testing.T) {
+	ctx := context.Background()
 	// Test Table, Suffix and WriteOptions
-	if err := s.Write(&store.Record{
+	if err := s.Write(ctx, &store.Record{
 		Key:    "foofoobarbar",
 		Value:  []byte("something"),
 		Expiry: time.Millisecond * 100,
 	}); err != nil {
 		t.Error(err)
 	}
-	if err := s.Write(&store.Record{
+	if err := s.Write(ctx, &store.Record{
 		Key:    "foofoo",
 		Value:  []byte("something"),
 		Expiry: time.Millisecond * 100,
 	}); err != nil {
 		t.Error(err)
 	}
-	if err := s.Write(&store.Record{
+	if err := s.Write(ctx, &store.Record{
 		Key:    "barbar",
 		Value:  []byte("something"),
 		Expiry: time.Millisecond * 100,
@@ -184,7 +187,7 @@ func readTests(s store.Store, t *testing.T) {
 		t.Error(err)
 	}
 
-	if results, err := s.Read("foo", store.ReadPrefix(), store.ReadSuffix()); err != nil {
+	if results, err := s.Read(ctx, "foo", store.ReadPrefix(), store.ReadSuffix()); err != nil {
 		t.Error(err)
 	} else {
 		if len(results) != 1 {
@@ -194,7 +197,7 @@ func readTests(s store.Store, t *testing.T) {
 
 	time.Sleep(time.Millisecond * 100)
 
-	if results, err := s.List(); err != nil {
+	if results, err := s.List(ctx); err != nil {
 		t.Fatalf("List failed: %s", err)
 	} else {
 		if len(results) != 0 {
@@ -204,14 +207,14 @@ func readTests(s store.Store, t *testing.T) {
 
 	// write the following records
 	for i := 0; i < 10; i++ {
-		s.Write(&store.Record{
+		s.Write(ctx, &store.Record{
 			Key:   fmt.Sprintf("a%d", i),
 			Value: []byte{},
 		})
 	}
 
 	// read back a few records
-	if results, err := s.Read("a", store.ReadLimit(5), store.ReadPrefix()); err != nil {
+	if results, err := s.Read(ctx, "a", store.ReadLimit(5), store.ReadPrefix()); err != nil {
 		t.Error(err)
 	} else {
 		if len(results) != 5 {
@@ -223,7 +226,7 @@ func readTests(s store.Store, t *testing.T) {
 	}
 
 	// read the rest back
-	if results, err := s.Read("a", store.ReadLimit(30), store.ReadOffset(5), store.ReadPrefix()); err != nil {
+	if results, err := s.Read(ctx, "a", store.ReadLimit(30), store.ReadOffset(5), store.ReadPrefix()); err != nil {
 		t.Fatal(err)
 	} else {
 		if len(results) != 5 {
@@ -233,11 +236,12 @@ func readTests(s store.Store, t *testing.T) {
 }
 
 func listTests(s store.Store, t *testing.T) {
+	ctx := context.Background()
 	for i := 0; i < 10; i++ {
-		s.Write(&store.Record{Key: fmt.Sprintf("List%d", i), Value: []byte("bar")})
+		s.Write(ctx, &store.Record{Key: fmt.Sprintf("List%d", i), Value: []byte("bar")})
 	}
 
-	recs, err := s.List(store.ListPrefix("List"))
+	recs, err := s.List(ctx, store.ListPrefix("List"))
 	if err != nil {
 		t.Fatalf("Error listing records %s", err)
 	}
@@ -245,7 +249,7 @@ func listTests(s store.Store, t *testing.T) {
 		t.Fatalf("Expected 10 records, received %d", len(recs))
 	}
 
-	recs, err = s.List(store.ListPrefix("List"), store.ListLimit(5))
+	recs, err = s.List(ctx, store.ListPrefix("List"), store.ListLimit(5))
 	if err != nil {
 		t.Fatalf("Error listing records %s", err)
 	}
@@ -253,7 +257,7 @@ func listTests(s store.Store, t *testing.T) {
 		t.Fatalf("Expected 5 records, received %d", len(recs))
 	}
 
-	recs, err = s.List(store.ListPrefix("List"), store.ListOffset(6))
+	recs, err = s.List(ctx, store.ListPrefix("List"), store.ListOffset(6))
 	if err != nil {
 		t.Fatalf("Error listing records %s", err)
 	}
@@ -261,7 +265,7 @@ func listTests(s store.Store, t *testing.T) {
 		t.Fatalf("Expected 4 records, received %d %+v", len(recs), recs)
 	}
 
-	recs, err = s.List(store.ListPrefix("List"), store.ListOffset(6), store.ListLimit(2))
+	recs, err = s.List(ctx, store.ListPrefix("List"), store.ListOffset(6), store.ListLimit(2))
 	if err != nil {
 		t.Fatalf("Error listing records %s", err)
 	}
@@ -270,10 +274,10 @@ func listTests(s store.Store, t *testing.T) {
 	}
 
 	for i := 0; i < 10; i++ {
-		s.Write(&store.Record{Key: fmt.Sprintf("ListOffset%d", i), Value: []byte("bar")})
+		s.Write(ctx, &store.Record{Key: fmt.Sprintf("ListOffset%d", i), Value: []byte("bar")})
 	}
 
-	recs, err = s.List(store.ListPrefix("ListOffset"), store.ListOffset(6))
+	recs, err = s.List(ctx, store.ListPrefix("ListOffset"), store.ListOffset(6))
 	if err != nil {
 		t.Fatalf("Error listing records %s", err)
 	}
@@ -284,8 +288,9 @@ func listTests(s store.Store, t *testing.T) {
 }
 
 func expiryTests(s store.Store, t *testing.T) {
+	ctx := context.Background()
 	// Read and Write an expiring Record
-	if err := s.Write(&store.Record{
+	if err := s.Write(ctx, &store.Record{
 		Key:    "Hello",
 		Value:  []byte("World"),
 		Expiry: time.Millisecond * 150,
@@ -293,7 +298,7 @@ func expiryTests(s store.Store, t *testing.T) {
 		t.Error(err)
 	}
 
-	if r, err := s.Read("Hello"); err != nil {
+	if r, err := s.Read(ctx, "Hello"); err != nil {
 		t.Fatal(err)
 	} else {
 		if len(r) != 1 {
@@ -310,15 +315,15 @@ func expiryTests(s store.Store, t *testing.T) {
 	// wait for expiry
 	time.Sleep(time.Millisecond * 200)
 
-	if _, err := s.Read("Hello"); err != store.ErrNotFound {
+	if _, err := s.Read(ctx, "Hello"); err != store.ErrNotFound {
 		t.Errorf("Expected %# v, got %# v", store.ErrNotFound, err)
 	}
 
 	// exercise the records expiry
-	s.Write(&store.Record{Key: "aaa", Value: []byte("bbb"), Expiry: 1 * time.Second})
-	s.Write(&store.Record{Key: "aaaa", Value: []byte("bbb"), Expiry: 1 * time.Second})
-	s.Write(&store.Record{Key: "aaaaa", Value: []byte("bbb"), Expiry: 1 * time.Second})
-	results, err := s.Read("a", store.ReadPrefix())
+	s.Write(ctx, &store.Record{Key: "aaa", Value: []byte("bbb"), Expiry: 1 * time.Second})
+	s.Write(ctx, &store.Record{Key: "aaaa", Value: []byte("bbb"), Expiry: 1 * time.Second})
+	s.Write(ctx, &store.Record{Key: "aaaaa", Value: []byte("bbb"), Expiry: 1 * time.Second})
+	results, err := s.Read(ctx, "a", store.ReadPrefix())
 	if err != nil {
 		t.Error(err)
 	}
@@ -326,7 +331,7 @@ func expiryTests(s store.Store, t *testing.T) {
 		t.Fatalf("Results should have returned 3 records, returned %d", len(results))
 	}
 	time.Sleep(1 * time.Second)
-	results, err = s.Read("a", store.ReadPrefix())
+	results, err = s.Read(ctx, "a", store.ReadPrefix())
 	if err != nil {
 		t.Error(err)
 	}
@@ -336,6 +341,7 @@ func expiryTests(s store.Store, t *testing.T) {
 }
 
 func suffixPrefixExpiryTests(s store.Store, t *testing.T) {
+	ctx := context.Background()
 	// Write 3 records with various expiry and get with Prefix
 	records := []*store.Record{
 		&store.Record{
@@ -350,12 +356,12 @@ func suffixPrefixExpiryTests(s store.Store, t *testing.T) {
 	}
 
 	for _, r := range records {
-		if err := s.Write(r); err != nil {
+		if err := s.Write(ctx, r); err != nil {
 			t.Errorf("Couldn't write k: %s, v: %# v (%s)", r.Key, pretty.Formatter(r.Value), err)
 		}
 	}
 
-	if results, err := s.Read("foo", store.ReadPrefix()); err != nil {
+	if results, err := s.Read(ctx, "foo", store.ReadPrefix()); err != nil {
 		t.Errorf("Couldn't read all \"foo\" keys, got %#v (%s)", spew.Sdump(results), err)
 	} else {
 		if len(results) != 2 {
@@ -366,17 +372,17 @@ func suffixPrefixExpiryTests(s store.Store, t *testing.T) {
 	// wait for the expiry
 	time.Sleep(1 * time.Second)
 
-	if results, err := s.Read("foo", store.ReadPrefix()); err != nil {
+	if results, err := s.Read(ctx, "foo", store.ReadPrefix()); err != nil {
 		t.Errorf("Couldn't read all \"foo\" keys, got %# v (%s)", spew.Sdump(results), err)
 	} else if len(results) != 1 {
 		t.Errorf("Expected 1 item, got %d", len(results))
 	}
 
-	if err := s.Delete("foo"); err != nil {
+	if err := s.Delete(ctx, "foo"); err != nil {
 		t.Errorf("Delete failed (%v)", err)
 	}
 
-	if results, err := s.Read("foo"); err != store.ErrNotFound {
+	if results, err := s.Read(ctx, "foo"); err != store.ErrNotFound {
 		t.Errorf("Expected read failure read all \"foo\" keys, got %# v (%s)", spew.Sdump(results), err)
 	} else {
 		if len(results) != 0 {
@@ -403,31 +409,31 @@ func suffixPrefixExpiryTests(s store.Store, t *testing.T) {
 		},
 	}
 	for _, r := range records {
-		if err := s.Write(r); err != nil {
+		if err := s.Write(ctx, r); err != nil {
 			t.Errorf("Couldn't write k: %s, v: %# v (%s)", r.Key, pretty.Formatter(r.Value), err)
 		}
 	}
-	if results, err := s.Read("foo", store.ReadSuffix()); err != nil {
+	if results, err := s.Read(ctx, "foo", store.ReadSuffix()); err != nil {
 		t.Errorf("Couldn't read all \"foo\" keys, got %# v (%s)", spew.Sdump(results), err)
 	} else {
 		if len(results) != 3 {
 			t.Errorf("Expected 3 items, got %d", len(results))
-			//t.Logf("Table test: %v\n", spew.Sdump(results))
+			// t.Logf("Table test: %v\n", spew.Sdump(results))
 		}
 
 	}
 	time.Sleep(time.Second * 1)
-	if results, err := s.Read("foo", store.ReadSuffix()); err != nil {
+	if results, err := s.Read(ctx, "foo", store.ReadSuffix()); err != nil {
 		t.Errorf("Couldn't read all \"foo\" keys, got %# v (%s)", spew.Sdump(results), err)
 	} else {
 		if len(results) != 2 {
 			t.Errorf("Expected 2 items, got %d", len(results))
-			//t.Logf("Table test: %v\n", spew.Sdump(results))
+			// t.Logf("Table test: %v\n", spew.Sdump(results))
 		}
 
 	}
 	time.Sleep(time.Second * 1)
-	if results, err := s.Read("foo", store.ReadSuffix()); err != nil {
+	if results, err := s.Read(ctx, "foo", store.ReadSuffix()); err != nil {
 		t.Errorf("Couldn't read all \"foo\" keys, got %# v (%s)", spew.Sdump(results), err)
 	} else {
 		if len(results) != 1 {
@@ -435,10 +441,10 @@ func suffixPrefixExpiryTests(s store.Store, t *testing.T) {
 			//	t.Logf("Table test: %# v\n", spew.Sdump(results))
 		}
 	}
-	if err := s.Delete("foo"); err != nil {
+	if err := s.Delete(ctx, "foo"); err != nil {
 		t.Errorf("Delete failed (%v)", err)
 	}
-	if results, err := s.Read("foo", store.ReadSuffix()); err != nil {
+	if results, err := s.Read(ctx, "foo", store.ReadSuffix()); err != nil {
 		t.Errorf("Couldn't read all \"foo\" keys, got %# v (%s)", spew.Sdump(results), err)
 	} else {
 		if len(results) != 0 {

@@ -1,12 +1,13 @@
 package server
 
 import (
+	"github.com/urfave/cli/v2"
+
 	pb "github.com/micro/micro/v3/proto/config"
 	"github.com/micro/micro/v3/service"
 	"github.com/micro/micro/v3/service/config/handler"
 	"github.com/micro/micro/v3/service/logger"
 	"github.com/micro/micro/v3/service/store"
-	"github.com/urfave/cli/v2"
 )
 
 const (
@@ -32,12 +33,12 @@ func Run(c *cli.Context) error {
 		service.Address(address),
 	)
 
-	store.DefaultStore.Init(store.Table("config"))
+	store.DefaultStore.Init(nil, store.Table("config"))
 
 	// register the handler
 	pb.RegisterConfigHandler(srv.Server(), handler.NewConfig(c.String("config_secret_key")))
 	// register the subscriber
-	//srv.Subscribe(watchTopic, new(watcher))
+	// srv.Subscribe(watchTopic, new(watcher))
 
 	if err := srv.Run(); err != nil {
 		logger.Fatal(err)

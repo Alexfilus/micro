@@ -14,6 +14,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/micro/micro/v3/client/cli/util"
 	_ "github.com/micro/micro/v3/cmd/usage"
 	"github.com/micro/micro/v3/plugin"
@@ -34,7 +36,6 @@ import (
 	"github.com/micro/micro/v3/util/report"
 	"github.com/micro/micro/v3/util/user"
 	"github.com/micro/micro/v3/util/wrapper"
-	"github.com/urfave/cli/v2"
 
 	muruntime "github.com/micro/micro/v3/service/runtime"
 )
@@ -289,11 +290,11 @@ func New(opts ...Option) *command {
 		cmd.app.Action = func(ctx *cli.Context) error { return nil }
 	}
 
-	//flags to add
+	// flags to add
 	if len(options.Flags) > 0 {
 		cmd.app.Flags = append(cmd.app.Flags, options.Flags...)
 	}
-	//action to replace
+	// action to replace
 	if options.Action != nil {
 		cmd.app.Action = options.Action
 	}
@@ -519,7 +520,7 @@ func (c *command) Before(ctx *cli.Context) error {
 	if len(ctx.String("service_name")) > 0 {
 		storeOpts = append(storeOpts, store.Table(ctx.String("service_name")))
 	}
-	if err := store.DefaultStore.Init(storeOpts...); err != nil {
+	if err := store.DefaultStore.Init(nil, storeOpts...); err != nil {
 		logger.Fatalf("Error configuring store: %v", err)
 	}
 
@@ -558,11 +559,11 @@ func (c *command) Init(opts ...Option) error {
 	c.app.HideVersion = len(c.opts.Version) == 0
 	c.app.Usage = c.opts.Description
 
-	//allow user's flags to add
+	// allow user's flags to add
 	if len(c.opts.Flags) > 0 {
 		c.app.Flags = append(c.app.Flags, c.opts.Flags...)
 	}
-	//action to replace
+	// action to replace
 	if c.opts.Action != nil {
 		c.app.Action = c.opts.Action
 	}

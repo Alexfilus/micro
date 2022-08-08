@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/micro/micro/v3/service/store"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/micro/micro/v3/service/store"
 )
 
 type testObj struct {
@@ -22,7 +23,7 @@ func TestPostgres(t *testing.T) {
 			One: "1",
 			Two: 2,
 		})
-		err := s.Write(&store.Record{
+		err := s.Write(nil, &store.Record{
 			Key:   "foobar/baz",
 			Value: b,
 			Metadata: map[string]interface{}{
@@ -30,7 +31,7 @@ func TestPostgres(t *testing.T) {
 			},
 		})
 		assert.NoError(t, err)
-		recs, err := s.Read("foobar/baz")
+		recs, err := s.Read(nil, "foobar/baz")
 		assert.NoError(t, err)
 		assert.Len(t, recs, 1)
 		assert.Equal(t, "foobar/baz", recs[0].Key)
@@ -50,7 +51,7 @@ func TestPostgres(t *testing.T) {
 			One: "1",
 			Two: 2,
 		})
-		err := s.Write(&store.Record{
+		err := s.Write(nil, &store.Record{
 			Key:   "foo/bar",
 			Value: b,
 			Metadata: map[string]interface{}{
@@ -58,7 +59,7 @@ func TestPostgres(t *testing.T) {
 			},
 		})
 		assert.NoError(t, err)
-		err = s.Write(&store.Record{
+		err = s.Write(nil, &store.Record{
 			Key:   "foo/baz",
 			Value: b,
 			Metadata: map[string]interface{}{
@@ -66,7 +67,7 @@ func TestPostgres(t *testing.T) {
 			},
 		})
 		assert.NoError(t, err)
-		recs, err := s.Read("foo/", store.ReadPrefix())
+		recs, err := s.Read(nil, "foo/", store.ReadPrefix())
 		assert.NoError(t, err)
 		assert.Len(t, recs, 2)
 		assert.Equal(t, "foo/bar", recs[0].Key)
@@ -83,7 +84,7 @@ func TestPostgres(t *testing.T) {
 			One: "1",
 			Two: 2,
 		})
-		err := s1.Write(&store.Record{
+		err := s1.Write(nil, &store.Record{
 			Key:   "foo/bar",
 			Value: b1,
 		})
@@ -92,17 +93,17 @@ func TestPostgres(t *testing.T) {
 			One: "1",
 			Two: 2,
 		})
-		err = s2.Write(&store.Record{
+		err = s2.Write(nil, &store.Record{
 			Key:   "foo/baz",
 			Value: b2,
 		})
 		assert.NoError(t, err)
-		recs1, err := s1.List()
+		recs1, err := s1.List(nil)
 		assert.NoError(t, err)
 		assert.Len(t, recs1, 1)
 		assert.Equal(t, "foo/bar", recs1[0])
 
-		recs2, err := s2.List()
+		recs2, err := s2.List(nil)
 		assert.NoError(t, err)
 		assert.Len(t, recs2, 1)
 		assert.Equal(t, "foo/baz", recs2[0])
@@ -118,7 +119,7 @@ func TestPostgres(t *testing.T) {
 			One: "1",
 			Two: 2,
 		})
-		err := s1.Write(&store.Record{
+		err := s1.Write(nil, &store.Record{
 			Key:   "foo/bar",
 			Value: b1,
 		})
@@ -127,17 +128,17 @@ func TestPostgres(t *testing.T) {
 			One: "1",
 			Two: 2,
 		})
-		err = s2.Write(&store.Record{
+		err = s2.Write(nil, &store.Record{
 			Key:   "foo/baz",
 			Value: b2,
 		})
 		assert.NoError(t, err)
-		recs1, err := s1.List()
+		recs1, err := s1.List(nil)
 		assert.NoError(t, err)
 		assert.Len(t, recs1, 1)
 		assert.Equal(t, "foo/bar", recs1[0])
 
-		recs2, err := s2.List()
+		recs2, err := s2.List(nil)
 		assert.NoError(t, err)
 		assert.Len(t, recs2, 1)
 		assert.Equal(t, "foo/baz", recs2[0])

@@ -1,6 +1,8 @@
 package server
 
 import (
+	"github.com/urfave/cli/v2"
+
 	pb "github.com/micro/micro/v3/proto/auth"
 	"github.com/micro/micro/v3/service"
 	"github.com/micro/micro/v3/service/auth"
@@ -10,7 +12,6 @@ import (
 	mustore "github.com/micro/micro/v3/service/store"
 	"github.com/micro/micro/v3/util/auth/token"
 	"github.com/micro/micro/v3/util/auth/token/jwt"
-	"github.com/urfave/cli/v2"
 )
 
 // Flags specific to the router
@@ -47,7 +48,7 @@ func Run(ctx *cli.Context) error {
 	)
 
 	// set the handlers store
-	mustore.DefaultStore.Init(store.Table("auth"))
+	mustore.DefaultStore.Init(nil, store.Table("auth"))
 	authH.Init(auth.Store(mustore.DefaultStore))
 	ruleH.Init(auth.Store(mustore.DefaultStore))
 

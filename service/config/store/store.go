@@ -40,7 +40,7 @@ func newConfig(store store.Store, key string) (*conf, error) {
 }
 
 func (c *conf) Get(path string, options ...config.Option) (config.Value, error) {
-	rec, err := c.store.Read(c.key)
+	rec, err := c.store.Read(nil, c.key)
 	dat := []byte("{}")
 	if err == nil && len(rec) > 0 {
 		dat = rec[0].Value
@@ -50,7 +50,7 @@ func (c *conf) Get(path string, options ...config.Option) (config.Value, error) 
 }
 
 func (c *conf) Set(path string, val interface{}, options ...config.Option) error {
-	rec, err := c.store.Read(c.key)
+	rec, err := c.store.Read(nil, c.key)
 	dat := []byte("{}")
 	if err == nil && len(rec) > 0 {
 		dat = rec[0].Value
@@ -82,7 +82,7 @@ func (c *conf) Set(path string, val interface{}, options ...config.Option) error
 	} else {
 		values.Set(path, val)
 	}
-	return c.store.Write(&store.Record{
+	return c.store.Write(nil, &store.Record{
 		Key:   c.key,
 		Value: values.Bytes(),
 	})
@@ -107,14 +107,14 @@ func traverse(m map[string]interface{}, paths []string, callback func(path strin
 }
 
 func (c *conf) Delete(path string, options ...config.Option) error {
-	rec, err := c.store.Read(c.key)
+	rec, err := c.store.Read(nil, c.key)
 	dat := []byte("{}")
 	if err != nil || len(rec) == 0 {
 		return nil
 	}
 	values := config.NewJSONValues(dat)
 	values.Delete(path)
-	return c.store.Write(&store.Record{
+	return c.store.Write(nil, &store.Record{
 		Key:   c.key,
 		Value: values.Bytes(),
 	})

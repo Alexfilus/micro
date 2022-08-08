@@ -18,11 +18,12 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/micro/micro/v3/service/events"
 	"github.com/micro/micro/v3/service/logger"
 	"github.com/micro/micro/v3/service/store"
 	"github.com/micro/micro/v3/service/store/memory"
-	"github.com/pkg/errors"
 )
 
 const joinKey = "/"
@@ -70,11 +71,7 @@ func (s *evStore) Read(topic string, opts ...events.ReadOption) ([]*events.Event
 	}
 
 	// execute the request
-	recs, err := s.opts.Store.Read(topic+joinKey,
-		store.ReadPrefix(),
-		store.ReadLimit(options.Limit),
-		store.ReadOffset(options.Offset),
-	)
+	recs, err := s.opts.Store.Read(nil, topic+joinKey, store.ReadPrefix(), store.ReadLimit(options.Limit), store.ReadOffset(options.Offset))
 	if err != nil {
 		return nil, errors.Wrap(err, "Error reading from store")
 	}
@@ -118,7 +115,7 @@ func (s *evStore) Write(event *events.Event, opts ...events.WriteOption) error {
 	}
 
 	// write the record to the store
-	if err := s.opts.Store.Write(record); err != nil {
+	if err := s.opts.Store.Write(nil, record); err != nil {
 		return errors.Wrap(err, "Error writing to the store")
 	}
 

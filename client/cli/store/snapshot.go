@@ -3,10 +3,11 @@ package cli
 import (
 	"net/url"
 
-	snap "github.com/micro/micro/v3/client/cli/store/snapshot"
-	"github.com/micro/micro/v3/service/logger"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
+
+	snap "github.com/micro/micro/v3/client/cli/store/snapshot"
+	"github.com/micro/micro/v3/service/logger"
 )
 
 // snapshot in the entrypoint for micro store snapshot
@@ -42,14 +43,14 @@ func snapshot(ctx *cli.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "couldn't start the snapshotter")
 	}
-	keys, err := s.List()
+	keys, err := s.List(nil)
 	if err != nil {
 		return errors.Wrap(err, "couldn't List() from store "+s.String())
 	}
 	log.Logf(logger.DebugLevel, "Snapshotting %d keys", len(keys))
 
 	for _, key := range keys {
-		r, err := s.Read(key)
+		r, err := s.Read(nil, key)
 		if err != nil {
 			return errors.Wrapf(err, "couldn't read key %s", key)
 		}

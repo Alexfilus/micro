@@ -12,19 +12,19 @@ func sync(ctx *cli.Context) error {
 		return errors.Wrap(err, "Sync")
 	}
 
-	keys, err := from.List()
+	keys, err := from.List(nil)
 	if err != nil {
 		return errors.Wrapf(err, "couldn't list from store %s", from.String())
 	}
 	for _, k := range keys {
-		r, err := from.Read(k)
+		r, err := from.Read(nil, k)
 		if err != nil {
 			return errors.Wrapf(err, "couldn't read %s from store %s", k, from.String())
 		}
 		if len(r) != 1 {
 			return errors.Errorf("received multiple records reading %s from %s", k, from.String())
 		}
-		err = to.Write(r[0])
+		err = to.Write(nil, r[0])
 		if err != nil {
 			return errors.Wrapf(err, "couldn't write %s to store %s", k, to.String())
 		}

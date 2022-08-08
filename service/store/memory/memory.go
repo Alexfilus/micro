@@ -16,15 +16,17 @@
 package memory
 
 import (
+	"context"
 	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/micro/micro/v3/service/store"
 	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
+
+	"github.com/micro/micro/v3/service/store"
 )
 
 // NewStore returns a memory store
@@ -208,7 +210,7 @@ func (m *memoryStore) Close() error {
 	return nil
 }
 
-func (m *memoryStore) Init(opts ...store.Option) error {
+func (m *memoryStore) Init(ctx context.Context, opts ...store.Option) error {
 	for _, o := range opts {
 		o(&m.options)
 	}
@@ -219,7 +221,7 @@ func (m *memoryStore) String() string {
 	return "memory"
 }
 
-func (m *memoryStore) Read(key string, opts ...store.ReadOption) ([]*store.Record, error) {
+func (m *memoryStore) Read(ctx context.Context, key string, opts ...store.ReadOption) ([]*store.Record, error) {
 	readOpts := store.ReadOptions{
 		Order: store.OrderAsc,
 	}
@@ -258,7 +260,7 @@ func (m *memoryStore) Read(key string, opts ...store.ReadOption) ([]*store.Recor
 	return results, nil
 }
 
-func (m *memoryStore) Write(r *store.Record, opts ...store.WriteOption) error {
+func (m *memoryStore) Write(ctx context.Context, r *store.Record, opts ...store.WriteOption) error {
 	writeOpts := store.WriteOptions{}
 	for _, o := range opts {
 		o(&writeOpts)
@@ -289,7 +291,7 @@ func (m *memoryStore) Write(r *store.Record, opts ...store.WriteOption) error {
 	return nil
 }
 
-func (m *memoryStore) Delete(key string, opts ...store.DeleteOption) error {
+func (m *memoryStore) Delete(ctx context.Context, key string, opts ...store.DeleteOption) error {
 	deleteOptions := store.DeleteOptions{}
 	for _, o := range opts {
 		o(&deleteOptions)
@@ -304,7 +306,7 @@ func (m *memoryStore) Options() store.Options {
 	return m.options
 }
 
-func (m *memoryStore) List(opts ...store.ListOption) ([]string, error) {
+func (m *memoryStore) List(ctx context.Context, opts ...store.ListOption) ([]string, error) {
 	listOptions := store.ListOptions{
 		Order: store.OrderAsc,
 	}

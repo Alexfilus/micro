@@ -11,9 +11,10 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/stoewer/go-strcase"
+
 	"github.com/micro/micro/v3/service/auth"
 	"github.com/micro/micro/v3/service/store"
-	"github.com/stoewer/go-strcase"
 )
 
 type model struct {
@@ -325,7 +326,7 @@ func (d *model) Create(instance interface{}) error {
 
 			k := d.indexToKey(index, id, oldEntry, true)
 			// TODO: set the table name in the query
-			err = d.options.Store.Delete(k, store.DeleteFrom(d.database, d.table))
+			err = d.options.Store.Delete(nil, k, store.DeleteFrom(d.database, d.table))
 			if err != nil {
 				return err
 			}
@@ -335,7 +336,7 @@ func (d *model) Create(instance interface{}) error {
 			fmt.Printf("Saving key '%v', value: '%v'\n", k, string(js))
 		}
 		// TODO: set the table name in the query
-		err = d.options.Store.Write(&store.Record{
+		err = d.options.Store.Write(nil, &store.Record{
 			Key:   k,
 			Value: js,
 		}, store.WriteTo(d.database, d.table))
@@ -379,7 +380,7 @@ func (d *model) Read(query Query, resultPointer interface{}) error {
 			store.ReadFrom(d.database, d.table),
 			store.ReadLimit(1),
 		}
-		recs, err := d.options.Store.Read(k, opts...)
+		recs, err := d.options.Store.Read(nil, k, opts...)
 		if err != nil {
 			return err
 		}
@@ -437,7 +438,7 @@ func (d *model) list(query Query, resultSlicePointer interface{}) error {
 		if query.Offset > 0 {
 			opts = append(opts, store.ReadOffset(uint(query.Offset)))
 		}
-		recs, err := d.options.Store.Read(k, opts...)
+		recs, err := d.options.Store.Read(nil, k, opts...)
 		if err != nil {
 			return err
 		}
@@ -689,7 +690,7 @@ func (d *model) Delete(query Query) error {
 			fmt.Printf("Deleting key '%v'\n", key)
 		}
 		// TODO: set the table to delete from
-		err = d.options.Store.Delete(key, store.DeleteFrom(d.database, d.table))
+		err = d.options.Store.Delete(nil, key, store.DeleteFrom(d.database, d.table))
 		if err != nil {
 			return err
 		}

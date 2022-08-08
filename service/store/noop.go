@@ -14,9 +14,11 @@
 
 package store
 
+import "context"
+
 type noopStore struct{}
 
-func (n *noopStore) Init(opts ...Option) error {
+func (n *noopStore) Init(ctx context.Context, opts ...Option) error {
 	return nil
 }
 
@@ -28,19 +30,19 @@ func (n *noopStore) String() string {
 	return "noop"
 }
 
-func (n *noopStore) Read(key string, opts ...ReadOption) ([]*Record, error) {
+func (n *noopStore) Read(ctx context.Context, key string, opts ...ReadOption) ([]*Record, error) {
 	return []*Record{}, nil
 }
 
-func (n *noopStore) Write(r *Record, opts ...WriteOption) error {
+func (n *noopStore) Write(ctx context.Context, r *Record, opts ...WriteOption) error {
 	return nil
 }
 
-func (n *noopStore) Delete(key string, opts ...DeleteOption) error {
+func (n *noopStore) Delete(ctx context.Context, key string, opts ...DeleteOption) error {
 	return nil
 }
 
-func (n *noopStore) List(opts ...ListOption) ([]string, error) {
+func (n *noopStore) List(ctx context.Context, opts ...ListOption) ([]string, error) {
 	return []string{}, nil
 }
 

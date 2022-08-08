@@ -75,7 +75,7 @@ func (h *Store) List(ctx context.Context, req *pb.ListRequest, stream pb.Store_L
 	}
 
 	// list from the store
-	vals, err := store.DefaultStore.List(opts...)
+	vals, err := store.DefaultStore.List(nil, opts...)
 	if err != nil && err == store.ErrNotFound {
 		return errors.NotFound("store.Store.List", err.Error())
 	} else if err != nil {
@@ -147,7 +147,7 @@ func (h *Store) Read(ctx context.Context, req *pb.ReadRequest, rsp *pb.ReadRespo
 	}
 
 	// read from the database
-	vals, err := store.DefaultStore.Read(req.Key, opts...)
+	vals, err := store.DefaultStore.Read(nil, req.Key, opts...)
 	if err != nil && err == store.ErrNotFound {
 		return errors.NotFound("store.Store.Read", err.Error())
 	} else if err != nil {
@@ -219,7 +219,7 @@ func (h *Store) Write(ctx context.Context, req *pb.WriteRequest, rsp *pb.WriteRe
 	}
 
 	// write to the store
-	err := store.DefaultStore.Write(record, opts...)
+	err := store.DefaultStore.Write(nil, record, opts...)
 	if err != nil && err == store.ErrNotFound {
 		return errors.NotFound("store.Store.Write", err.Error())
 	} else if err != nil {
@@ -257,7 +257,7 @@ func (h *Store) Delete(ctx context.Context, req *pb.DeleteRequest, rsp *pb.Delet
 	}
 
 	// delete from the store
-	if err := store.DefaultStore.Delete(req.Key, opts...); err == store.ErrNotFound {
+	if err := store.DefaultStore.Delete(nil, req.Key, opts...); err == store.ErrNotFound {
 		return errors.NotFound("store.Store.Delete", err.Error())
 	} else if err != nil {
 		return errors.InternalServerError("store.Store.Delete", err.Error())
@@ -278,7 +278,7 @@ func (h *Store) Databases(ctx context.Context, req *pb.DatabasesRequest, rsp *pb
 		store.ReadPrefix(),
 		store.ReadFrom(defaultDatabase, internalTable),
 	}
-	recs, err := store.DefaultStore.Read("databases/", opts...)
+	recs, err := store.DefaultStore.Read(nil, "databases/", opts...)
 	if err != nil {
 		return errors.InternalServerError("store.Store.Databases", err.Error())
 	}
@@ -311,7 +311,7 @@ func (h *Store) Tables(ctx context.Context, req *pb.TablesRequest, rsp *pb.Table
 
 	// perform the query
 	query := fmt.Sprintf("tables/%v/", req.Database)
-	recs, err := store.DefaultStore.Read(query, opts...)
+	recs, err := store.DefaultStore.Read(nil, query, opts...)
 	if err != nil {
 		return errors.InternalServerError("store.Store.Tables", err.Error())
 	}
@@ -337,13 +337,13 @@ func (h *Store) setupTable(database, table string) error {
 	// record the new database in the internal store
 	opt := store.WriteTo(defaultDatabase, internalTable)
 	dbRecord := &store.Record{Key: "databases/" + database, Value: []byte{}}
-	if err := store.DefaultStore.Write(dbRecord, opt); err != nil {
+	if err := store.DefaultStore.Write(nil, dbRecord, opt); err != nil {
 		return fmt.Errorf("Error writing new database to internal table: %v", err)
 	}
 
 	// record the new table in the internal store
 	tableRecord := &store.Record{Key: "tables/" + database + "/" + table, Value: []byte{}}
-	if err := store.DefaultStore.Write(tableRecord, opt); err != nil {
+	if err := store.DefaultStore.Write(nil, tableRecord, opt); err != nil {
 		return fmt.Errorf("Error writing new table to internal table: %v", err)
 	}
 

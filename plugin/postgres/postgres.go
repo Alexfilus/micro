@@ -18,6 +18,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
@@ -30,9 +31,10 @@ import (
 	"time"
 
 	"github.com/lib/pq"
+	"github.com/pkg/errors"
+
 	"github.com/micro/micro/v3/service/logger"
 	"github.com/micro/micro/v3/service/store"
-	"github.com/pkg/errors"
 )
 
 // DefaultDatabase is the namespace that the sql store
@@ -286,7 +288,7 @@ func (s *sqlStore) Close() error {
 	return nil
 }
 
-func (s *sqlStore) Init(opts ...store.Option) error {
+func (s *sqlStore) Init(ctx context.Context, opts ...store.Option) error {
 	for _, o := range opts {
 		o(&s.options)
 	}
@@ -295,7 +297,7 @@ func (s *sqlStore) Init(opts ...store.Option) error {
 }
 
 // List all the known records
-func (s *sqlStore) List(opts ...store.ListOption) ([]string, error) {
+func (s *sqlStore) List(ctx context.Context, opts ...store.ListOption) ([]string, error) {
 	options := store.ListOptions{
 		Order: store.OrderAsc,
 	}
@@ -378,7 +380,7 @@ func (s *sqlStore) rowToRecord(row *sql.Row) (*store.Record, error) {
 	if timehelper.Valid {
 		if timehelper.Time.Before(time.Now()) {
 			// record has expired
-			go s.Delete(record.Key)
+			go s.Delete(nil, record.Key)
 			return nil, store.ErrNotFound
 		}
 		record.Expiry = time.Until(timehelper.Time)
@@ -406,7 +408,7 @@ func (s *sqlStore) rowsToRecords(rows *sql.Rows) ([]*store.Record, error) {
 		if timehelper.Valid {
 			if timehelper.Time.Before(time.Now()) {
 				// record has expired
-				go s.Delete(record.Key)
+				go s.Delete(nil, record.Key)
 			} else {
 				record.Expiry = time.Until(timehelper.Time)
 				records = append(records, record)
@@ -419,7 +421,7 @@ func (s *sqlStore) rowsToRecords(rows *sql.Rows) ([]*store.Record, error) {
 }
 
 // Read a single key
-func (s *sqlStore) Read(key string, opts ...store.ReadOption) ([]*store.Record, error) {
+func (s *sqlStore) Read(ctx context.Context, key string, opts ...store.ReadOption) ([]*store.Record, error) {
 	options := store.ReadOptions{
 		Order: store.OrderAsc,
 	}
@@ -508,7 +510,7 @@ func (s *sqlStore) read(key string, options store.ReadOptions) ([]*store.Record,
 }
 
 // Write records
-func (s *sqlStore) Write(r *store.Record, opts ...store.WriteOption) error {
+func (s *sqlStore) Write(ctx context.Context, r *store.Record, opts ...store.WriteOption) error {
 	var options store.WriteOptions
 	for _, o := range opts {
 		o(&options)
@@ -549,7 +551,7 @@ func (s *sqlStore) Write(r *store.Record, opts ...store.WriteOption) error {
 }
 
 // Delete records with keys
-func (s *sqlStore) Delete(key string, opts ...store.DeleteOption) error {
+func (s *sqlStore) Delete(ctx context.Context, key string, opts ...store.DeleteOption) error {
 	var options store.DeleteOptions
 	for _, o := range opts {
 		o(&options)
@@ -584,7 +586,7 @@ func (s *sqlStore) Options() store.Options {
 }
 
 func (s *sqlStore) String() string {
-	return "cockroach"
+	return "pg"
 }
 
 // NewStore returns a new micro Store backed by sql

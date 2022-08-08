@@ -12,6 +12,9 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/serenize/snaker"
+	"github.com/urfave/cli/v2"
+
 	"github.com/micro/micro/v3/client/cli/namespace"
 	"github.com/micro/micro/v3/client/cli/util"
 	proto "github.com/micro/micro/v3/proto/debug"
@@ -19,8 +22,6 @@ import (
 	"github.com/micro/micro/v3/service/context/metadata"
 	"github.com/micro/micro/v3/service/registry"
 	cbytes "github.com/micro/micro/v3/util/codec/bytes"
-	"github.com/serenize/snaker"
-	"github.com/urfave/cli/v2"
 )
 
 func quit(c *cli.Context, args []string) ([]byte, error) {

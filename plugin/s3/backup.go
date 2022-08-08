@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	sthree "github.com/aws/aws-sdk-go/service/s3"
+
 	store2 "github.com/micro/micro/v3/service/events/store"
 	"github.com/micro/micro/v3/service/logger"
 	"github.com/micro/micro/v3/service/store"
@@ -83,7 +84,7 @@ dateLoop:
 		limit := 100
 		buf := &bytes.Buffer{}
 		for {
-			recs, err := st.Read("/"+next, store.ReadSuffix(), store.ReadLimit(uint(limit)), store.ReadOffset(uint(offset)))
+			recs, err := st.Read(nil, "/"+next, store.ReadSuffix(), store.ReadLimit(uint(limit)), store.ReadOffset(uint(offset)))
 			if err == store.ErrNotFound || len(recs) == 0 {
 				logger.Errorf("No records found")
 				break

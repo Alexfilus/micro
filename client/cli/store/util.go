@@ -3,9 +3,10 @@ package cli
 import (
 	"strings"
 
-	"github.com/micro/micro/v3/service/store"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
+
+	"github.com/micro/micro/v3/service/store"
 )
 
 // makeStore is a helper function that creates a store for snapshot and restore
@@ -19,7 +20,7 @@ func makeStore(ctx *cli.Context) (store.Store, error) {
 		store.Database(ctx.String("database")),
 		store.Table(ctx.String("table")),
 	)
-	if err := s.Init(); err != nil {
+	if err := s.Init(nil); err != nil {
 		return nil, errors.Wrapf(err, "Couldn't init %s store", ctx.String("store"))
 	}
 	return s, nil
@@ -40,7 +41,7 @@ func makeStores(ctx *cli.Context) (store.Store, store.Store, error) {
 		store.Database(ctx.String("from-database")),
 		store.Table(ctx.String("from-table")),
 	)
-	if err := from.Init(); err != nil {
+	if err := from.Init(nil); err != nil {
 		return nil, nil, errors.Wrapf(err, "from: couldn't init %s", ctx.String("from-backend"))
 	}
 	to := toBuilder(
@@ -48,7 +49,7 @@ func makeStores(ctx *cli.Context) (store.Store, store.Store, error) {
 		store.Database(ctx.String("to-database")),
 		store.Table(ctx.String("to-table")),
 	)
-	if err := to.Init(); err != nil {
+	if err := to.Init(nil); err != nil {
 		return nil, nil, errors.Wrapf(err, "to: couldn't init %s", ctx.String("to-backend"))
 	}
 	return from, to, nil

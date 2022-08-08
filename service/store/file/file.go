@@ -17,13 +17,15 @@ package file
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/micro/micro/v3/service/store"
 	bolt "go.etcd.io/bbolt"
+
+	"github.com/micro/micro/v3/service/store"
 )
 
 var (
@@ -299,11 +301,11 @@ func (f *fileStore) Close() error {
 	return nil
 }
 
-func (f *fileStore) Init(opts ...store.Option) error {
+func (f *fileStore) Init(ctx context.Context, opts ...store.Option) error {
 	return f.init(opts...)
 }
 
-func (m *fileStore) Delete(key string, opts ...store.DeleteOption) error {
+func (m *fileStore) Delete(ctx context.Context, key string, opts ...store.DeleteOption) error {
 	var deleteOptions store.DeleteOptions
 	for _, o := range opts {
 		o(&deleteOptions)
@@ -318,7 +320,7 @@ func (m *fileStore) Delete(key string, opts ...store.DeleteOption) error {
 	return m.delete(db, key)
 }
 
-func (m *fileStore) Read(key string, opts ...store.ReadOption) ([]*store.Record, error) {
+func (m *fileStore) Read(ctx context.Context, key string, opts ...store.ReadOption) ([]*store.Record, error) {
 	var readOpts store.ReadOptions
 	for _, o := range opts {
 		o(&readOpts)
@@ -361,7 +363,7 @@ func (m *fileStore) Read(key string, opts ...store.ReadOption) ([]*store.Record,
 	return results, nil
 }
 
-func (m *fileStore) Write(r *store.Record, opts ...store.WriteOption) error {
+func (m *fileStore) Write(ctx context.Context, r *store.Record, opts ...store.WriteOption) error {
 	var writeOpts store.WriteOptions
 	for _, o := range opts {
 		o(&writeOpts)
@@ -395,7 +397,7 @@ func (m *fileStore) Options() store.Options {
 	return m.options
 }
 
-func (m *fileStore) List(opts ...store.ListOption) ([]string, error) {
+func (m *fileStore) List(ctx context.Context, opts ...store.ListOption) ([]string, error) {
 	var listOptions store.ListOptions
 
 	for _, o := range opts {

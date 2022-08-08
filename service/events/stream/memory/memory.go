@@ -21,11 +21,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
+
 	"github.com/micro/micro/v3/service/events"
 	"github.com/micro/micro/v3/service/logger"
 	"github.com/micro/micro/v3/service/store"
 	"github.com/micro/micro/v3/service/store/memory"
-	"github.com/pkg/errors"
 )
 
 // NewStream returns an initialized memory stream
@@ -104,7 +105,7 @@ func (m *mem) Publish(topic string, msg interface{}, opts ...events.PublishOptio
 
 	// write to the store
 	key := fmt.Sprintf("%v/%v", event.Topic, event.ID)
-	if err := m.store.Write(&store.Record{Key: key, Value: bytes}); err != nil {
+	if err := m.store.Write(nil, &store.Record{Key: key, Value: bytes}); err != nil {
 		return errors.Wrap(err, "Error writing event to store")
 	}
 
@@ -166,7 +167,7 @@ func (m *mem) Consume(topic string, opts ...events.ConsumeOption) (<-chan events
 // them into the subscribers channel
 func (m *mem) lookupPreviousEvents(sub *subscriber, startTime time.Time) {
 	// lookup all events which match the topic (a blank topic will return all results)
-	recs, err := m.store.Read(sub.Topic+"/", store.ReadPrefix())
+	recs, err := m.store.Read(nil, sub.Topic+"/", store.ReadPrefix())
 	if err != nil && logger.V(logger.ErrorLevel, logger.DefaultLogger) {
 		logger.Errorf("Error looking up previous events: %v", err)
 		return

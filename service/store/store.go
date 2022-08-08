@@ -17,6 +17,7 @@
 package store
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"time"
@@ -42,17 +43,17 @@ var (
 // Store is a data storage interface
 type Store interface {
 	// Init initialises the store. It must perform any required setup on the backing storage implementation and check that it is ready for use, returning any errors.
-	Init(...Option) error
+	Init(ctx context.Context, opts ...Option) error
 	// Options allows you to view the current options.
 	Options() Options
 	// Read takes a single key name and optional ReadOptions. It returns matching []*Record or an error.
-	Read(key string, opts ...ReadOption) ([]*Record, error)
-	// Write() writes a record to the store, and returns an error if the record was not written.
-	Write(r *Record, opts ...WriteOption) error
+	Read(ctx context.Context, key string, opts ...ReadOption) ([]*Record, error)
+	// Write writes a record to the store, and returns an error if the record was not written.
+	Write(ctx context.Context, r *Record, opts ...WriteOption) error
 	// Delete removes the record with the corresponding key from the store.
-	Delete(key string, opts ...DeleteOption) error
+	Delete(ctx context.Context, key string, opts ...DeleteOption) error
 	// List returns any keys that match, or an empty list with no error if none matched.
-	List(opts ...ListOption) ([]string, error)
+	List(ctx context.Context, opts ...ListOption) ([]string, error)
 	// Close the store
 	Close() error
 	// String returns the name of the implementation.
@@ -98,20 +99,20 @@ func (r *Record) Decode(v interface{}) error {
 // Read records
 func Read(key string, opts ...ReadOption) ([]*Record, error) {
 	// execute the query
-	return DefaultStore.Read(key, opts...)
+	return DefaultStore.Read(nil, key, opts...)
 }
 
 // Write a record to the store
 func Write(r *Record) error {
-	return DefaultStore.Write(r)
+	return DefaultStore.Write(nil, r)
 }
 
 // Delete removes the record with the corresponding key from the store.
 func Delete(key string) error {
-	return DefaultStore.Delete(key)
+	return DefaultStore.Delete(nil, key)
 }
 
 // List returns any keys that match, or an empty list with no error if none matched.
 func List(opts ...ListOption) ([]string, error) {
-	return DefaultStore.List(opts...)
+	return DefaultStore.List(nil, opts...)
 }
