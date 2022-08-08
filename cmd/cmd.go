@@ -16,6 +16,8 @@ import (
 	"unicode"
 
 	"github.com/google/uuid"
+	"github.com/urfave/cli/v2"
+
 	"github.com/micro/micro/v3/client/cli/namespace"
 	clitoken "github.com/micro/micro/v3/client/cli/token"
 	"github.com/micro/micro/v3/client/cli/util"
