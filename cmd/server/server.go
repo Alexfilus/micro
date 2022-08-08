@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/micro/micro/v3/cmd"
 	"github.com/micro/micro/v3/service/auth"
@@ -217,5 +218,9 @@ func Run(context *cli.Context) error {
 
 	runtimeServer.Stop()
 	log.Info("Stopped server")
+
+	// just wait 1 sec
+	<-time.After(time.Second)
+
 	return nil
 }
